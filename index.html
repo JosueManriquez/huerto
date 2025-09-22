@@ -3,13 +3,276 @@
 
 <head>
   <meta charset="utf-8" />
-  <title>Huerto Automático - Dashboard</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Huerto - Dashboard (Side A / Side B)</title>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --bg: #f2f6f0;
+      --card: #fff;
+      --accent: #2d7a2d;
+      --muted: #666;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: #222;
+    }
+
+    header {
+      background: var(--accent);
+      color: white;
+      padding: 14px 20px;
+      text-align: center;
+    }
+
+    .container {
+      display: flex;
+      gap: 18px;
+      padding: 18px;
+      max-width: 1200px;
+      margin: 18px auto;
+      flex-wrap: wrap;
+    }
+
+    .side {
+      flex: 1;
+      background: var(--card);
+      border-radius: 12px;
+      padding: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      min-width: 320px;
+    }
+
+    .title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      gap: 10px;
+    }
+
+    .title h2 {
+      margin: 0;
+      color: var(--accent);
+      font-size: 18px
+    }
+
+    .status-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .status {
+      flex: 1;
+      background: #f8fff8;
+      border-radius: 8px;
+      padding: 8px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .charts {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .chart-card {
+      flex: 1;
+      background: #fff;
+      border-radius: 8px;
+      padding: 8px;
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 160px !important;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .btn-on {
+      background: #2d7a2d;
+      color: #fff;
+      border-color: #1e5a1e;
+    }
+
+    .value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #222;
+    }
+
+    .select-plant {
+      padding: 6px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    .config-box {
+      margin-top: 10px;
+      background: #fafafa;
+      padding: 8px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #333;
+    }
+
+    footer {
+      text-align: center;
+      padding: 12px;
+      color: var(--muted);
+    }
+
+    @media (max-width:900px) {
+      .charts {
+        flex-direction: column;
+      }
+
+      canvas {
+        height: 140px !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Huerto Automático - Dashboard</h1>
+  </header>
+
+  <div class="container">
+    <!-- SIDE A -->
+    <div class="side" id="sideA">
+      <div class="title">
+        <h2>Side A - (DHT11)</h2>
+        <div style="display:flex;gap:8px;align-items:center">
+          <label for="plantA"
+            style="font-size:13px;color:#fff;background:var(--accent);padding:6px 8px;border-radius:6px;">Planta</label>
+          <select id="plantA" class="select-plant" aria-label="Seleccionar planta lado A"></select>
+        </div>
+      </div>
+
+      <div class="status-row">
+        <div class="status">
+          <div>Temperatura</div>
+          <div class="value" id="tempA">-- °C</div>
+        </div>
+        <div class="status">
+          <div>Humedad Aire</div>
+          <div class="value" id="humA">-- %</div>
+        </div>
+        <div class="status">
+          <div>Humedad Suelo</div>
+          <div class="value" id="soilA">-- %</div>
+        </div>
+        <div class="status">
+          <div>Luz</div>
+          <div class="value" id="luxA">-- lx</div>
+        </div>
+      </div>
+
+      <div class="charts">
+        <div class="chart-card"><canvas id="chartTempA"></canvas></div>
+        <div class="chart-card"><canvas id="chartHumA"></canvas></div>
+      </div>
+
+      <div class="config-box" id="configA">
+        <div>Perfil actual: <strong id="profileNameA">--</strong></div>
+        <div>Temp target: <span id="cfgTempA">--</span> °C · Soil min: <span id="cfgSoilA">--</span> % · Lux min: <span
+            id="cfgLuxA">--</span> lx</div>
+      </div>
+
+      <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;">
+        <div>Actuadores:</div>
+        <div class="controls">
+          <button class="btn" id="btnFanA">Fan OFF</button>
+          <button class="btn" id="btnHeaterA">Heater OFF</button>
+          <button class="btn" id="btnPumpA">Pump OFF</button>
+          <button class="btn" id="btnLightA">Light OFF</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIDE B -->
+    <div class="side" id="sideB">
+      <div class="title">
+        <h2>Side B - (DHT22)</h2>
+        <div style="display:flex;gap:8px;align-items:center">
+          <label for="plantB"
+            style="font-size:13px;color:#fff;background:var(--accent);padding:6px 8px;border-radius:6px;">Planta</label>
+          <select id="plantB" class="select-plant" aria-label="Seleccionar planta lado B"></select>
+        </div>
+      </div>
+
+      <div class="status-row">
+        <div class="status">
+          <div>Temperatura</div>
+          <div class="value" id="tempB">-- °C</div>
+        </div>
+        <div class="status">
+          <div>Humedad Aire</div>
+          <div class="value" id="humB">-- %</div>
+        </div>
+        <div class="status">
+          <div>Humedad Suelo</div>
+          <div class="value" id="soilB">-- %</div>
+        </div>
+        <div class="status">
+          <div>&nbsp;</div>
+          <div class="value">&nbsp;</div>
+        </div>
+      </div>
+
+      <div class="charts">
+        <div class="chart-card"><canvas id="chartTempB"></canvas></div>
+        <div class="chart-card"><canvas id="chartHumB"></canvas></div>
+      </div>
+
+      <div class="config-box" id="configB">
+        <div>Perfil actual: <strong id="profileNameB">--</strong></div>
+        <div>Temp target: <span id="cfgTempB">--</span> °C · Soil min: <span id="cfgSoilB">--</span> %</div>
+      </div>
+
+      <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;">
+        <div>Actuadores:</div>
+        <div class="controls">
+          <button class="btn" id="btnFanB">Fan OFF</button>
+          <button class="btn" id="btnHeaterB">Heater OFF</button>
+          <button class="btn" id="btnPumpB">Pump OFF</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- <footer>© Huerto - datos en tiempo real con Firebase</footer> -->
+
+  <!-- Firebase SDK (modular) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getDatabase, ref, onChildAdded } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+    import { getDatabase, ref, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-    // Config Firebase
+    // ======= tu firebaseConfig (tal como pediste) =======
     const firebaseConfig = {
       apiKey: "AIzaSyDsEb_YAGcr9S9fKjzmJKuA7RdNuJtQZJg",
       authDomain: "huerto-unandes.firebaseapp.com",
@@ -19,116 +282,267 @@
       messagingSenderId: "692107518924",
       appId: "1:692107518924:web:e637fdb7fafc029284b369"
     };
+    // =====================================================
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const dhtRef = ref(db, 'DHT22');
 
-    // Últimos valores
-    const lastTempEl = document.getElementById('lastTemp');
-    const lastHumEl = document.getElementById('lastHum');
+    // PATHS
+    const readingsARef = ref(db, "huerto/sideA/readings");
+    const readingsBRef = ref(db, "huerto/sideB/readings");
+    const actuatorsARef = ref(db, "huerto/sideA/actuators");
+    const actuatorsBRef = ref(db, "huerto/sideB/actuators");
+    const configARef = ref(db, "huerto/sideA/config");
+    const configBRef = ref(db, "huerto/sideB/config");
 
-    // Datos para gráfico
-    const labels = [];
-    const tempData = [];
-    const humData = [];
+    // charts
+    const maxPoints = 20;
+    let labelsA = [], tempAData = [], humAData = [], soilAData = [];
+    let labelsB = [], tempBData = [], humBData = [], soilBData = [];
 
-    // Crear gráfico
-    const ctx = document.getElementById('myChart').getContext('2d');
-    const myChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [
-          { label: 'Temperatura (°C)', data: tempData, borderColor: 'red', backgroundColor: 'rgba(255,0,0,0.15)', tension: 0.4, fill: true },
-          { label: 'Humedad (%)', data: humData, borderColor: 'blue', backgroundColor: 'rgba(0,0,255,0.12)', tension: 0.4, fill: true }
-        ]
+    // create charts
+    const chartTempA = new Chart(document.getElementById("chartTempA"), {
+      type: "line", data: { labels: labelsA, datasets: [{ label: "Temp (°C)", data: tempAData, borderColor: "red", backgroundColor: "rgba(255,0,0,0.12)", fill: true }] },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+    const chartHumA = new Chart(document.getElementById("chartHumA"), {
+      type: "line", data: { labels: labelsA, datasets: [{ label: "Hum (%)", data: humAData, borderColor: "blue", backgroundColor: "rgba(0,0,255,0.12)", fill: true }] },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+    const chartTempB = new Chart(document.getElementById("chartTempB"), {
+      type: "line", data: { labels: labelsB, datasets: [{ label: "Temp (°C)", data: tempBData, borderColor: "red", backgroundColor: "rgba(255,0,0,0.12)", fill: true }] },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+    const chartHumB = new Chart(document.getElementById("chartHumB"), {
+      type: "line", data: { labels: labelsB, datasets: [{ label: "Hum (%)", data: humBData, borderColor: "blue", backgroundColor: "rgba(0,0,255,0.12)", fill: true }] },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    // Plant profiles (chosen target and thresholds)
+    // We'll write these to /huerto/sideX/config when user selects a plant
+    const PLANT_PROFILES = {
+      "Hierbabuena": {
+        temp_target: 22.5, temp_deadband: 2.0,
+        soil_min: 60, lux_min: 1000
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'top' }, title: { display: true, text: 'Lecturas del DHT22' } },
-        scales: {
-          x: { title: { display: true, text: 'Fecha y Hora' }, ticks: { maxRotation: 90, minRotation: 45 } },
-          y: { title: { display: true, text: 'Valor' }, beginAtZero: true }
-        }
+      "Tomate": {
+        temp_target: 25.0, temp_deadband: 2.5,
+        soil_min: 70, lux_min: 2500
+      },
+      "Perejil": {
+        temp_target: 21.0, temp_deadband: 2.0,
+        soil_min: 60, lux_min: 1000
+      },
+      "Zanahoria": {
+        temp_target: 19.0, temp_deadband: 2.0,
+        soil_min: 65, lux_min: 900
+      },
+      "Cebolla": {
+        temp_target: 17.5, temp_deadband: 2.0,
+        soil_min: 60, lux_min: 900
+      }
+    };
+
+    // Fill selects
+    const plantSelectA = document.getElementById("plantA");
+    const plantSelectB = document.getElementById("plantB");
+    Object.keys(PLANT_PROFILES).forEach(name => {
+      const oA = document.createElement("option"); oA.value = name; oA.textContent = name; plantSelectA.appendChild(oA);
+      const oB = document.createElement("option"); oB.value = name; oB.textContent = name; plantSelectB.appendChild(oB);
+    });
+
+    // When user picks a plant, write profile to Firebase config for that side
+    function applyProfileToSide(sidePath, plantName) {
+      const profile = PLANT_PROFILES[plantName];
+      if (!profile) return;
+      set(ref(db, `huerto/${sidePath}/config`), profile)
+        .then(() => {
+          console.log("Perfil guardado", sidePath, plantName, profile);
+        })
+        .catch(e => console.error("Error guardando perfil:", e));
+    }
+
+    plantSelectA.addEventListener("change", (e) => {
+      const plant = e.target.value;
+      applyProfileToSide("sideA", plant);
+      document.getElementById("profileNameA").textContent = plant;
+    });
+    plantSelectB.addEventListener("change", (e) => {
+      const plant = e.target.value;
+      applyProfileToSide("sideB", plant);
+      document.getElementById("profileNameB").textContent = plant;
+    });
+
+    // Load existing configs (so selects reflect DB on load)
+    onValue(configARef, (snap) => {
+      const cfg = snap.val();
+      if (!cfg) return;
+      // try to match profile by temp_target if possible
+      const findName = Object.keys(PLANT_PROFILES).find(n => Math.abs(PLANT_PROFILES[n].temp_target - (cfg.temp_target || 0)) < 0.6);
+      if (findName) { plantSelectA.value = findName; document.getElementById("profileNameA").textContent = findName; }
+      document.getElementById("cfgTempA").textContent = (cfg.temp_target !== undefined) ? cfg.temp_target : "--";
+      document.getElementById("cfgSoilA").textContent = (cfg.soil_min !== undefined) ? cfg.soil_min : "--";
+      document.getElementById("cfgLuxA").textContent = (cfg.lux_min !== undefined) ? cfg.lux_min : "--";
+    });
+
+    onValue(configBRef, (snap) => {
+      const cfg = snap.val();
+      if (!cfg) return;
+      const findName = Object.keys(PLANT_PROFILES).find(n => Math.abs(PLANT_PROFILES[n].temp_target - (cfg.temp_target || 0)) < 0.6);
+      if (findName) { plantSelectB.value = findName; document.getElementById("profileNameB").textContent = findName; }
+      document.getElementById("cfgTempB").textContent = (cfg.temp_target !== undefined) ? cfg.temp_target : "--";
+      document.getElementById("cfgSoilB").textContent = (cfg.soil_min !== undefined) ? cfg.soil_min : "--";
+    });
+
+    // Utility: toggle actuator (reads current value and flips)
+    async function toggleActuator(side, key) {
+      const p = `huerto/${side}/actuators/${key}`;
+      const snap = await get(ref(db, p));
+      let current = false;
+      if (snap.exists()) current = snap.val();
+      await set(ref(db, p), !current);
+    }
+
+    document.getElementById("btnFanA").onclick = () => toggleActuator("sideA", "fan");
+    document.getElementById("btnHeaterA").onclick = () => toggleActuator("sideA", "heater");
+    document.getElementById("btnPumpA").onclick = () => toggleActuator("sideA", "pump");
+    document.getElementById("btnLightA").onclick = () => toggleActuator("sideA", "light");
+
+    document.getElementById("btnFanB").onclick = () => toggleActuator("sideB", "fan");
+    document.getElementById("btnHeaterB").onclick = () => toggleActuator("sideB", "heater");
+    document.getElementById("btnPumpB").onclick = () => toggleActuator("sideB", "pump");
+
+    // Listen actuators to update button labels/styles
+    onValue(actuatorsARef, (snap) => {
+      const s = snap.val() || {};
+      document.getElementById("btnFanA").textContent = (s.fan ? "Fan ON" : "Fan OFF");
+      document.getElementById("btnFanA").classList.toggle("btn-on", !!s.fan);
+      document.getElementById("btnHeaterA").textContent = (s.heater ? "Heater ON" : "Heater OFF");
+      document.getElementById("btnHeaterA").classList.toggle("btn-on", !!s.heater);
+      document.getElementById("btnPumpA").textContent = (s.pump ? "Pump ON" : "Pump OFF");
+      document.getElementById("btnPumpA").classList.toggle("btn-on", !!s.pump);
+      document.getElementById("btnLightA").textContent = (s.light ? "Light ON" : "Light OFF");
+      document.getElementById("btnLightA").classList.toggle("btn-on", !!s.light);
+    });
+
+    onValue(actuatorsBRef, (snap) => {
+      const s = snap.val() || {};
+      document.getElementById("btnFanB").textContent = (s.fan ? "Fan ON" : "Fan OFF");
+      document.getElementById("btnFanB").classList.toggle("btn-on", !!s.fan);
+      document.getElementById("btnHeaterB").textContent = (s.heater ? "Heater ON" : "Heater OFF");
+      document.getElementById("btnHeaterB").classList.toggle("btn-on", !!s.heater);
+      document.getElementById("btnPumpB").textContent = (s.pump ? "Pump ON" : "Pump OFF");
+      document.getElementById("btnPumpB").classList.toggle("btn-on", !!s.pump);
+    });
+
+    // READINGS: Side A
+    onValue(readingsARef, (snap) => {
+      if (!snap.exists()) return;
+      const data = snap.val();
+      const keys = Object.keys(data).sort();
+      const lastKeys = keys.slice(-maxPoints);
+
+      labelsA = []; tempAData = []; humAData = []; soilAData = [];
+      lastKeys.forEach(k => {
+        const r = data[k];
+        labelsA.push(k.split("_")[1] ?? k);
+        tempAData.push(r.temperatura ?? r.temp ?? null);
+        humAData.push(r.humedad ?? r.hum ?? null);
+        soilAData.push(r.humedad_suelo ?? r.hum_suelo ?? r.humedad_suelo ?? null);
+      });
+
+      chartTempA.data.labels = labelsA; chartTempA.data.datasets[0].data = tempAData; chartTempA.update();
+      chartHumA.data.labels = labelsA; chartHumA.data.datasets[0].data = humAData; chartHumA.update();
+
+      const last = data[lastKeys[lastKeys.length - 1]];
+      if (last) {
+        document.getElementById("tempA").textContent = (last.temperatura ?? last.temp) !== undefined ? ((last.temperatura ?? last.temp).toFixed ? (last.temperatura ?? last.temp).toFixed(2) + " °C" : (last.temperatura ?? last.temp) + " °C") : "--";
+        document.getElementById("humA").textContent = (last.humedad ?? last.hum) !== undefined ? ((last.humedad ?? last.hum).toFixed ? (last.humedad ?? last.hum).toFixed(2) + " %" : (last.humedad ?? last.hum) + " %") : "--";
+        document.getElementById("soilA").textContent = (last.humedad_suelo ?? last.hum_suelo) !== undefined ? ((last.humedad_suelo ?? last.hum_suelo).toFixed ? (last.humedad_suelo ?? last.hum_suelo).toFixed(2) + " %" : (last.humedad_suelo ?? last.hum_suelo) + " %") : "--";
+        document.getElementById("luxA").textContent = (last.luz !== undefined) ? (last.luz.toFixed ? last.luz.toFixed(0) + " lx" : last.luz + " lx") : "--";
+        document.getElementById("timeA").textContent = lastKeys[lastKeys.length - 1].replace("_", " ");
+      }
+
+      // borrar viejos manteniendo maxPoints
+      if (keys.length > maxPoints) {
+        const removeKeys = keys.slice(0, keys.length - maxPoints);
+        removeKeys.forEach(k => remove(ref(db, "huerto/sideA/readings/" + k)));
       }
     });
 
-    // Solo agregar nuevos nodos cuando lleguen
-    onChildAdded(dhtRef, (snap) => {
-      const key = snap.key;
-      const val = snap.val();
+    // READINGS: Side B
+    onValue(readingsBRef, (snap) => {
+      if (!snap.exists()) return;
+      const data = snap.val();
+      const keys = Object.keys(data).sort();
+      const lastKeys = keys.slice(-maxPoints);
 
-      labels.push(key);
-      tempData.push(val.temperatura ?? null);
-      humData.push(val.humedad ?? null);
+      labelsB = []; tempBData = []; humBData = []; soilBData = [];
+      lastKeys.forEach(k => {
+        const r = data[k];
+        labelsB.push(k.split("_")[1] ?? k);
+        tempBData.push(r.temperatura ?? r.temp ?? null);
+        humBData.push(r.humedad ?? r.hum ?? null);
+        soilBData.push(r.humedad_suelo ?? r.hum_suelo ?? null);
+      });
 
-      // Mantener últimas 20 lecturas
-      if (labels.length > 20) {
-        labels.shift();
-        tempData.shift();
-        humData.shift();
+      chartTempB.data.labels = labelsB; chartTempB.data.datasets[0].data = tempBData; chartTempB.update();
+      chartHumB.data.labels = labelsB; chartHumB.data.datasets[0].data = humBData; chartHumB.update();
+
+      const last = data[lastKeys[lastKeys.length - 1]];
+      if (last) {
+        document.getElementById("tempB").textContent = (last.temperatura ?? last.temp) !== undefined ? ((last.temperatura ?? last.temp).toFixed ? (last.temperatura ?? last.temp).toFixed(2) + " °C" : (last.temperatura ?? last.temp) + " °C") : "--";
+        document.getElementById("humB").textContent = (last.humedad ?? last.hum) !== undefined ? ((last.humedad ?? last.hum).toFixed ? (last.humedad ?? last.hum).toFixed(2) + " %" : (last.humedad ?? last.hum) + " %") : "--";
+        document.getElementById("soilB").textContent = (last.humedad_suelo ?? last.hum_suelo) !== undefined ? ((last.humedad_suelo ?? last.hum_suelo).toFixed ? (last.humedad_suelo ?? last.hum_suelo).toFixed(2) + " %" : (last.humedad_suelo ?? last.hum_suelo) + " %") : "--";
+        document.getElementById("timeB").textContent = lastKeys[lastKeys.length - 1].replace("_", " ");
       }
 
-      myChart.update();
-
-      // actualizar resumen último valor (sin borrar si viene null)
-      if (typeof val.temperatura === "number") {
-        lastTempEl.textContent = `Temperatura: ${val.temperatura.toFixed(2)} °C`;
-      }
-      if (typeof val.humedad === "number") {
-        lastHumEl.textContent = `Humedad: ${val.humedad.toFixed(2)} %`;
+      // borrar viejos manteniendo maxPoints
+      if (keys.length > maxPoints) {
+        const removeKeys = keys.slice(0, keys.length - maxPoints);
+        removeKeys.forEach(k => remove(ref(db, "huerto/sideB/readings/" + k)));
       }
     });
+
+    // Load initial actuators state to sync button appearance
+    onValue(actuatorsARef, (snap) => {
+      const s = snap.val() || {};
+      document.getElementById("btnFanA").textContent = (s.fan ? "Fan ON" : "Fan OFF");
+      document.getElementById("btnFanA").classList.toggle("btn-on", !!s.fan);
+      document.getElementById("btnHeaterA").textContent = (s.heater ? "Heater ON" : "Heater OFF");
+      document.getElementById("btnHeaterA").classList.toggle("btn-on", !!s.heater);
+      document.getElementById("btnPumpA").textContent = (s.pump ? "Pump ON" : "Pump OFF");
+      document.getElementById("btnPumpA").classList.toggle("btn-on", !!s.pump);
+      document.getElementById("btnLightA").textContent = (s.light ? "Light ON" : "Light OFF");
+      document.getElementById("btnLightA").classList.toggle("btn-on", !!s.light);
+    });
+    onValue(actuatorsBRef, (snap) => {
+      const s = snap.val() || {};
+      document.getElementById("btnFanB").textContent = (s.fan ? "Fan ON" : "Fan OFF");
+      document.getElementById("btnFanB").classList.toggle("btn-on", !!s.fan);
+      document.getElementById("btnHeaterB").textContent = (s.heater ? "Heater ON" : "Heater OFF");
+      document.getElementById("btnHeaterB").classList.toggle("btn-on", !!s.heater);
+      document.getElementById("btnPumpB").textContent = (s.pump ? "Pump ON" : "Pump OFF");
+      document.getElementById("btnPumpB").classList.toggle("btn-on", !!s.pump);
+    });
+
+    // If there's no config for a side, write a default profile (Cebolla)
+    async function ensureDefaultConfig(side) {
+      const cfgSnap = await get(ref(db, `huerto/${side}/config`));
+      if (!cfgSnap.exists()) {
+        // default cebolla
+        const def = PLANT_PROFILES["Cebolla"];
+        await set(ref(db, `huerto/${side}/config`), { temp_target: def.temp_target, temp_deadband: def.temp_deadband, soil_min: def.soil_min, lux_min: def.lux_min });
+        // set UI select
+        if (side === "sideA") { plantSelectA.value = "Cebolla"; document.getElementById("profileNameA").textContent = "Cebolla"; }
+        if (side === "sideB") { plantSelectB.value = "Cebolla"; document.getElementById("profileNameB").textContent = "Cebolla"; }
+      }
+    }
+    ensureDefaultConfig("sideA");
+    ensureDefaultConfig("sideB");
+
+    // END module
   </script>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background: linear-gradient(to right, #a8e063, #56ab2f);
-      color: #fff;
-      margin: 0;
-      padding: 0;
-    }
-
-    h1 {
-      margin: 20px 0;
-    }
-
-    #lastValues {
-      font-size: 1.2rem;
-      margin-bottom: 15px;
-    }
-
-    .chart-container {
-      position: relative;
-      height: 60vh;
-      width: 95%;
-      margin: auto;
-      background: #fff;
-      border-radius: 14px;
-      padding: 10px;
-    }
-
-    canvas {
-      display: block;
-      width: 100% !important;
-      height: 100% !important;
-    }
-  </style>
-</head>
-
-<body>
-  <h1>Huerto Automático - Dashboard</h1>
-  <div id="lastValues">
-    <span id="lastTemp">Temperatura: -- °C</span> |
-    <span id="lastHum">Humedad: -- %</span>
-  </div>
-  <div class="chart-container">
-    <canvas id="myChart"></canvas>
-  </div>
 </body>
 
 </html>
