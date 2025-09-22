@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Huerto Automático - Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getDatabase, ref, onChildAdded } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+    // Config Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyDsEb_YAGcr9S9fKjzmJKuA7RdNuJtQZJg",
+      authDomain: "huerto-unandes.firebaseapp.com",
+      databaseURL: "https://huerto-unandes-default-rtdb.firebaseio.com",
+      projectId: "huerto-unandes",
+      storageBucket: "huerto-unandes.appspot.com",
+      messagingSenderId: "692107518924",
+      appId: "1:692107518924:web:e637fdb7fafc029284b369"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const dhtRef = ref(db, 'DHT22');
+
+    // Últimos valores
+    const lastTempEl = document.getElementById('lastTemp');
+    const lastHumEl = document.getElementById('lastHum');
+
+    // Datos para gráfico
+    const labels = [];
+    const tempData = [];
+    const humData = [];
+
+    // Crear gráfico
+    const ctx = document.getElementById('myChart').getContext('2d');
+    const myChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: 'Temperatura (°C)', data: tempData, borderColor: 'red', backgroundColor: 'rgba(255,0,0,0.15)', tension: 0.4, fill: true },
+          { label: 'Humedad (%)', data: humData, borderColor: 'blue', backgroundColor: 'rgba(0,0,255,0.12)', tension: 0.4, fill: true }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'top' }, title: { display: true, text: 'Lecturas del DHT22' } },
+        scales: {
+          x: { title: { display: true, text: 'Fecha y Hora' }, ticks: { maxRotation: 90, minRotation: 45 } },
+          y: { title: { display: true, text: 'Valor' }, beginAtZero: true }
+        }
+      }
+    });
+
+    // Solo agregar nuevos nodos cuando lleguen
+    onChildAdded(dhtRef, (snap) => {
+      const key = snap.key;
+      const val = snap.val();
+
+      labels.push(key);
+      tempData.push(val.temperatura ?? null);
+      humData.push(val.humedad ?? null);
+
+      // Mantener últimas 20 lecturas
+      if (labels.length > 20) {
+        labels.shift();
+        tempData.shift();
+        humData.shift();
+      }
+
+      myChart.update();
+
+      // actualizar resumen último valor (sin borrar si viene null)
+      if (typeof val.temperatura === "number") {
+        lastTempEl.textContent = `Temperatura: ${val.temperatura.toFixed(2)} °C`;
+      }
+      if (typeof val.humedad === "number") {
+        lastHumEl.textContent = `Humedad: ${val.humedad.toFixed(2)} %`;
+      }
+    });
+  </script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: linear-gradient(to right, #a8e063, #56ab2f);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      margin: 20px 0;
+    }
+
+    #lastValues {
+      font-size: 1.2rem;
+      margin-bottom: 15px;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 60vh;
+      width: 95%;
+      margin: auto;
+      background: #fff;
+      border-radius: 14px;
+      padding: 10px;
+    }
+
+    canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Huerto Automático - Dashboard</h1>
+  <div id="lastValues">
+    <span id="lastTemp">Temperatura: -- °C</span> |
+    <span id="lastHum">Humedad: -- %</span>
+  </div>
+  <div class="chart-container">
+    <canvas id="myChart"></canvas>
+  </div>
+</body>
+
+</html>
